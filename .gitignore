@@ -1,0 +1,20 @@
+# 忽略编译输出目录
+build/
+out/
+bin/
+lib/
+
+# 忽略 CMake 生成的文件
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# 忽略 VS Code 设置文件
+.vscode/
+
+# 忽略其他常见临时文件
+*.swp
+*.swo
+*.bak
+*.tmp
