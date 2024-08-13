@@ -3,6 +3,12 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+struct Pixel
+{
+    glm::vec3 color{0, 0, 0};
+    int count{0};
+};
+
 class Film
 {
 public:
@@ -13,17 +19,18 @@ public:
     size_t getWidth() const { return width; }
     size_t getHeight() const {return height;}
 
-    glm::vec3 getPixel(size_t x, size_t y) const
+    Pixel getPixel(size_t x, size_t y) const
     {
         return pixels[y * width + x];
     }
 
-    void setPixel(size_t x, size_t y, const glm::vec3 &color)
+    void addSample(size_t x, size_t y, const glm::vec3 &color)
     {
-        pixels[y * width + x] = color;
+        pixels[y * width + x].color += color;
+        pixels[y * width + x].count++;
     }
 
 private:
     size_t width, height;
-    std::vector<glm::vec3> pixels;
+    std::vector<Pixel> pixels;
 };

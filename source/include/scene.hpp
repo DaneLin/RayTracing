@@ -4,7 +4,8 @@
 
 struct ShapeInstance
 {
-    const Shape* shape;
+    const Shape& shape;
+    const Material &material;
     glm::mat4 world_from_object;
     glm::mat4 object_from_world;
 };
@@ -18,7 +19,8 @@ public:
     Scene &operator=(const Scene &) = delete;
     Scene &operator=(Scene &&) = delete;
 
-    void addShape(const Shape *shape, 
+    void addShape(const Shape &shape, 
+        const Material &material = {},
         const glm::vec3& position = glm::vec3(0.f, 0.f, 0.f), 
         const glm::vec3& rotation = glm::vec3(0.f, 0.f, 0.f), 
         const glm::vec3& scale = glm::vec3(1.f, 1.f, 1.f));
