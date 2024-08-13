@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include "shape/model.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -42,7 +42,7 @@ Model::Model(const std::filesystem::path & filename)
             iss >> idx_v.x >> trash >> trash >> idx_vn.x;
             iss >> idx_v.y >> trash >> trash >> idx_vn.y;
             iss >> idx_v.z >> trash >> trash >> idx_vn.z;
-            triangles.emplace_back(Triangle(positions[idx_v.x - 1],
+            triangles.push_back(Triangle(positions[idx_v.x - 1],
                 positions[idx_v.y -1],
                 positions[idx_v.z - 1],
                 normals[idx_vn.x -1],

@@ -1,5 +1,6 @@
-#include "thread_pool.hpp"
+#include "thread/thread_pool.hpp"
 
+ThreadPool thread_pool {};
 void ThreadPool::WorkerThread(ThreadPool *master)
 {
     while (master->alive == 1)
@@ -24,6 +25,7 @@ ThreadPool::ThreadPool(size_t thread_count)
     if (thread_count == 0)
     {
         thread_count = std::thread::hardware_concurrency();
+        //thread_count = 1;
     }
     for (size_t i =0 ; i <thread_count;i++)
     {

@@ -1,4 +1,4 @@
-#include "sphere.hpp"
+#include "shape/sphere.hpp"
 
 std::optional<HitInfo> Sphere::intersect(const Ray &ray, float t_min, float t_max) const {
     // 由于光线的转换，因此法线可能不是单位向量

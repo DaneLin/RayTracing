@@ -1,6 +1,8 @@
-#include "film.hpp"
 #include <fstream>
-#include "rgb.hpp"
+
+#include "camera/film.hpp"
+#include "utils/rgb.hpp"
+
 
 Film::Film(size_t width, size_t height)
     : width(width), height(height)

@@ -24,6 +24,8 @@ public:
         return pixels[y * width + x];
     }
 
+    void clear() { pixels.clear(); pixels.resize(width * height); }
+
     void addSample(size_t x, size_t y, const glm::vec3 &color)
     {
         pixels[y * width + x].color += color;
