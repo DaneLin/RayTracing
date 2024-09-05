@@ -5,7 +5,7 @@
 class Progress
 {
 public:
-    Progress(size_t total, size_t step = 1);
+    Progress(size_t total, size_t step = 10);
 
     void update(size_t count);
 

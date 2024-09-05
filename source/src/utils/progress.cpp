@@ -7,7 +7,7 @@
 Progress::Progress(size_t total, size_t step)
     :total(total), current(0), step(step), last_percent(0),percent(0)
 {
-    std::clog << "\rCurrent Progress: 0%" << std::flush;
+    std::cout << "\rCurrent Progress: 0%" << std::endl;
 }
 void Progress::update(size_t count)
 {
@@ -18,7 +18,7 @@ void Progress::update(size_t count)
     if (percent - last_percent >= step)
     {
         last_percent = percent;
-        std::clog << "\rCurrent Progress: " << percent << "%" << std::flush;
+        std::cout << "\rCurrent Progress: " << percent << "%" << std::endl;
     }
     if (percent == 100)
     {

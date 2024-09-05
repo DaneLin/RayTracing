@@ -1,5 +1,7 @@
 #pragma once
 
+#include "accelerate/bounds.hpp"
+
 #include "triangle.hpp"
 #include <filesystem>
 
@@ -9,10 +11,13 @@ public:
     Model(const std::filesystem::path& filename);
 
     Model(const std::vector<Triangle>& triangles)
-        : triangles(triangles) {}
+        : triangles(triangles) { build(); }
 
     std::optional<HitInfo> intersect(const Ray& ray, float t_min, float t_max) const override;
 
 private:
+    void build();
+private:
+    Bounds bounds{};
     std::vector<Triangle> triangles;
 };

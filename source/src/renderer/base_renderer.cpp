@@ -1,8 +1,10 @@
 #include "renderer/base_renderer.hpp"
 #include "thread/thread_pool.hpp"
 #include "utils/progress.hpp"
+#include <utils/profile.hpp>
 void BaseRenderer::render(size_t spp, const std::filesystem::path& filename)
 {
+    PROFILE("Render " +std::to_string(spp) +"spp " + filename.string() )
     size_t current_spp = 0, increment =1;
     auto &film = camera.getFilm();
     Progress progress(film.getWidth() * film.getHeight() * spp);

@@ -21,7 +21,7 @@
 int main(int, char**){
 
 
-    Film film { 192 * 5, 108 *5 };
+    Film film { 192 * 2, 108 *2 };
     Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
    
 
