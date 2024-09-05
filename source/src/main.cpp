@@ -66,7 +66,7 @@ int main(int, char**){
     film.clear();
 
     SimpleRTRenderer simple_rt_renderer(camera, scene);
-    simple_rt_renderer.render(64, "simple_rt.ppm");
+    simple_rt_renderer.render(256, "simple_rt.ppm");
 //     int spp = 16;
 //     Progress progress(film.getWidth() * film.getHeight() * spp);
 //     RNG rng(12123);
