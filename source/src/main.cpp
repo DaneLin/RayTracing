@@ -7,6 +7,7 @@
 
 #include "renderer/normal_renderer.hpp"
 #include "renderer/simple_rt_renderer.hpp"
+#include "renderer/debug_renderer.hpp"
 
 #include "shape/sphere.hpp"
 #include "shape/model.hpp"
@@ -21,7 +22,7 @@
 int main(int, char**){
 
 
-    Film film { 192 * 2, 108 *2 };
+    Film film { 192 * 5, 108 *5 };
     Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
    
 
@@ -41,29 +42,38 @@ int main(int, char**){
         model,
         { RGB(202, 159, 117) },
         { 0, 0, 0 },
-        { 1, 3, 2 }
+        { 1, 3, 2 },
+        {2,2,2}
     );
-    scene.addShape(
-        sphere,
-        { { 1, 1, 1 }, false, RGB(255, 128, 128) },
-        { 0, 0, 2.5 }
-    );
-    scene.addShape(
-        sphere,
-        { { 1, 1, 1 }, false, RGB(128, 128, 255) },
-        { 0, 0, -2.5 }
-    );
-    scene.addShape(
-        sphere,
-        { { 1, 1, 1 }, true },
-        { 3, 0.5, -2 }
-    );
-    scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    // scene.addShape(
+    //     sphere,
+    //     { { 1, 1, 1 }, false, RGB(255, 128, 128) },
+    //     { 0, 0, 2.5 }
+    // );
+    // scene.addShape(
+    //     sphere,
+    //     { { 1, 1, 1 }, false, RGB(128, 128, 255) },
+    //     { 0, 0, -2.5 }
+    // );
+    // scene.addShape(
+    //     sphere,
+    //     { { 1, 1, 1 }, true },
+    //     { 3, 0.5, -2 }
+    // );
+    // scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
 
-    // NormalRenderer normal_renderer(camera, scene);
-    // normal_renderer.render(32, "normal.ppm");
+    NormalRenderer normal_renderer(camera, scene);
+    normal_renderer.render(32, "normal.ppm");
 
-    film.clear();
+    BoundsTestCountRenderer btc_renderer(camera,scene);
+    btc_renderer.render(1, "BTC.ppm");
+
+    TriangleTestCountRenderer ttc_renderer(camera,scene);
+    ttc_renderer.render(1, "TTC.ppm");
+
+    BoundsDepthRenderer bd_renderer(camera,scene);
+    bd_renderer.render(1, "BD.ppm");
+
 
     SimpleRTRenderer simple_rt_renderer(camera, scene);
     simple_rt_renderer.render(256, "simple_rt.ppm");

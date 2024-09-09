@@ -7,6 +7,7 @@ void BaseRenderer::render(size_t spp, const std::filesystem::path& filename)
     PROFILE("Render " +std::to_string(spp) +"spp " + filename.string() )
     size_t current_spp = 0, increment =1;
     auto &film = camera.getFilm();
+    film.clear();
     Progress progress(film.getWidth() * film.getHeight() * spp);
     while (current_spp < spp)
     {

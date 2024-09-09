@@ -2,8 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
-
+#define EPS 1e-5f
 
 void Scene::addShape(const Shape& shape, const Material &material,const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale)
 {
@@ -44,6 +43,7 @@ std::optional<HitInfo> Scene::intersect(const Ray &ray, float t_min, float t_max
         closest_hit_info->normal = glm::normalize(glm::vec3(glm::transpose(closest_instance->object_from_world) * glm::vec4(closest_hit_info->normal, 0.f)));
         // 添加材质信息
         closest_hit_info->material = &closest_instance->material;
+        closest_hit_info->hit_point += EPS * closest_hit_info->normal ;
     }
 
     return closest_hit_info;
