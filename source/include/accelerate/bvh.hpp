@@ -94,7 +94,7 @@ private:
     size_t recursiveFlatten(BVHTreeNode* node);
 
 private:
-	BVHTreeNodeAllocator allocator;
+	BVHTreeNodeAllocator allocator{};
     // 存储展开后的线性结构
     std::vector<BVHNode> nodes;
     std::vector<Triangle> ordered_triangles;
