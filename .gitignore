@@ -18,3 +18,5 @@ Makefile
 *.swo
 *.bak
 *.tmp
+/CMakeSettings.json
+/.vs

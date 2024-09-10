@@ -49,6 +49,10 @@ public:
         }
         float idx_float = t * color_pallet.size();
         size_t idx = glm::floor(idx_float);
+        if (idx == 24)
+        {
+            return RGB{ 255, 0, 0 };
+        }
         return Lerp(color_pallet[idx], color_pallet[idx + 1], glm::fract(idx_float));
     }
 

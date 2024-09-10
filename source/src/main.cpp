@@ -1,7 +1,3 @@
-#include <iostream>
-
-#include "thread/thread_pool.hpp"
-
 #include "camera/film.hpp"
 #include "camera/camera.hpp"
 
@@ -16,8 +12,6 @@
 
 #include "utils/frame.hpp"
 #include "utils/rgb.hpp"
-#include "utils/rng.hpp"
-#include "utils/progress.hpp"
 
 int main(int, char**){
 
@@ -26,7 +20,7 @@ int main(int, char**){
     Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
    
 
-    Model model("../../models/simple_dragon.obj");
+    Model model("../../models/dragon_87k.obj");
     Sphere sphere {
         { 1.5f, 0, 0 },
         1.f
@@ -45,22 +39,22 @@ int main(int, char**){
         { 1, 3, 2 },
         {2,2,2}
     );
-    // scene.addShape(
-    //     sphere,
-    //     { { 1, 1, 1 }, false, RGB(255, 128, 128) },
-    //     { 0, 0, 2.5 }
-    // );
-    // scene.addShape(
-    //     sphere,
-    //     { { 1, 1, 1 }, false, RGB(128, 128, 255) },
-    //     { 0, 0, -2.5 }
-    // );
-    // scene.addShape(
-    //     sphere,
-    //     { { 1, 1, 1 }, true },
-    //     { 3, 0.5, -2 }
-    // );
-    // scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+     scene.addShape(
+         sphere,
+         { { 1, 1, 1 }, false, RGB(255, 128, 128) },
+         { 0, 0, 2.5 }
+     );
+     scene.addShape(
+         sphere,
+         { { 1, 1, 1 }, false, RGB(128, 128, 255) },
+         { 0, 0, -2.5 }
+     );
+     scene.addShape(
+         sphere,
+         { { 1, 1, 1 }, true },
+         { 3, 0.5, -2 }
+     );
+     scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
 
     NormalRenderer normal_renderer(camera, scene);
     normal_renderer.render(32, "normal.ppm");

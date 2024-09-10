@@ -1,14 +1,26 @@
 #include "accelerate/bvh.hpp"
 #include "utils/debug_macro.hpp"
 #include <array>
+#include <iostream>
 
 void BVH::build(std::vector<Triangle>&& triangles)
 {
-    auto *root = new BVHTreeNode{};
+    auto *root = allocator.allocate();
     root->triangles = std::move(triangles);
     root->updateBounds();
     root->depth = 1;
-    recursiveSplit(root);
+
+    BVHState state{};
+	size_t triangle_count = root->triangles.size();
+    recursiveSplit(root,state);
+
+	std::cout << "Total Node Count: " << state.total_node_count << '\n';
+	std::cout << "Leaf Node Count: " << state.leaf_node_count << std::endl;
+    std::cout << "Triangle Count: " << triangle_count << std::endl;
+	std::cout << "Max Leaf Node Triangle Count: " << state.max_leaf_node_triangle_count << std::endl;
+
+	nodes.reserve(state.total_node_count);
+    ordered_triangles.reserve(triangle_count);
     recursiveFlatten(root);
 }
 
@@ -23,6 +35,8 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
         ray.direction.z < 0
     };
 
+	glm::vec3 inv_direction = 1.f / ray.direction;
+
     DEBUG_LINE(size_t bounds_test_count =0, triangle_test_count = 0;)
 
     std::array<int, 32> stack;
@@ -35,7 +49,7 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
 
         DEBUG_LINE(bounds_test_count++;)
 
-        if (!node.bounds.hasIntersection(ray, t_min, t_max))
+        if (!node.bounds.hasIntersection(ray, inv_direction, t_min, t_max))
         {
             if (ptr == stack.begin()) break;
             current_node_index = *(--ptr);
@@ -85,74 +99,118 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     return closest_hit_info;
 }
 
-void BVH::recursiveSplit(BVHTreeNode *node)
+void BVH::recursiveSplit(BVHTreeNode *node, BVHState& state)
 {
+    state.total_node_count++;
     if (node->triangles.size() == 1 || node->depth > 32)
     {
+        state.addLeafNode(node);
         return;
     }
 
     glm::vec3 diag = node->bounds.diagonal();
-    size_t max_axis = diag.x > diag.y ? (diag.x > diag.z ? 0 : 2) : (diag.y > diag.z ? 1 : 2);
-    node->split_axis = max_axis;
-    float mid = node->bounds.b_min[max_axis] + diag[max_axis] * 0.5f;
-    std::vector<Triangle> child0_triangles, child1_triangles;
-    for (const auto&triangle : node->triangles)
+
+    float min_cost = std::numeric_limits<float>::infinity();
+    size_t min_split_index = 0;
+    Bounds min_child0_bounds{}, min_child1_bounds{};
+    size_t min_child0_triangle_count = 0, min_child1_triangle_count = 0;
+    constexpr size_t bucket_count = 12;
+    std::vector<size_t> triangle_indice_buckets[3][bucket_count] = {};
+
+    for (size_t axis = 0; axis < 3; axis++)
     {
-        if ((triangle.p0[max_axis] + triangle.p1[max_axis] + triangle.p2[max_axis])/ 3.f < mid)
+        Bounds bounds_buckets[bucket_count] = {};
+		size_t triangle_count_buckets[bucket_count] = {};
+        size_t triangle_index = 0;
+        for (const auto& triangle : node->triangles)
         {
-            child0_triangles.push_back(triangle);
+            auto triangle_center = (triangle.p0[axis] + triangle.p1[axis] + triangle.p2[axis]) / 3.f;
+			size_t bucket_index = glm::clamp<size_t>(
+                glm::floor((triangle_center - node->bounds.b_min[axis]) * bucket_count / diag[axis] ), 
+                0u, bucket_count - 1);
+			bounds_buckets[bucket_index].expand(triangle.p0);
+			bounds_buckets[bucket_index].expand(triangle.p1);
+			bounds_buckets[bucket_index].expand(triangle.p2);
+			triangle_count_buckets[bucket_index]++;
+            triangle_indice_buckets[axis][bucket_index].push_back(triangle_index);
+            triangle_index++;
         }
-        else
+
+        Bounds left_bounds = bounds_buckets[0];
+        size_t left_triangle_count = triangle_count_buckets[0];
+        for (size_t i =1 ;i <= bucket_count - 1; i++)
         {
-            child1_triangles.push_back(triangle);
+			Bounds right_bounds{};
+			size_t right_triangle_count = 0;
+			for (size_t j = bucket_count - 1; j >= i; j--)
+			{
+				right_bounds.expand(bounds_buckets[j]);
+				right_triangle_count += triangle_count_buckets[j];
+			}
+            if (right_triangle_count == 0)
+            {
+                break;
+            }
+            if (left_triangle_count != 0)
+            {
+				float cost = left_bounds.area() * left_triangle_count + right_bounds.area() * right_triangle_count;
+				if (cost < min_cost)
+				{
+					min_cost = cost;
+					node->split_axis = axis;
+                    min_split_index = i;
+                    min_child0_bounds = left_bounds;
+					min_child1_bounds = right_bounds;
+					min_child0_triangle_count = left_triangle_count;
+					min_child1_triangle_count = right_triangle_count;
+				}
+			}
+			left_bounds.expand(bounds_buckets[i]);
+			left_triangle_count += triangle_count_buckets[i];
+        }
+
+        if (min_split_index ==  0)
+        {
+            state.addLeafNode(node);
+            return;
         }
     }
-    if (child0_triangles.empty() || child1_triangles.empty())
-    {
-        return;
-    }
-    auto *child0 = new BVHTreeNode{};
-    auto *child1 = new BVHTreeNode{};
+
+    auto *child0 = allocator.allocate();
+    auto *child1 = allocator.allocate();
     node->children[0] = child0;
     node->children[1] = child1;
+
+	child0->triangles.reserve(min_child0_triangle_count);
+	child1->triangles.reserve(min_child1_triangle_count);
+
+    for (size_t i = 0; i < min_split_index; i++)
+    {
+        for (size_t idx : triangle_indice_buckets[node->split_axis][i])
+        {
+            child0->triangles.push_back(node->triangles[idx]);
+        }
+    }
+
+    for (size_t i = min_split_index; i < bucket_count; i++)
+    {
+        for (size_t idx : triangle_indice_buckets[node->split_axis][i])
+        {
+            child1->triangles.push_back(node->triangles[idx]);
+        }
+    }
+
     node->triangles.clear();
     node->triangles.shrink_to_fit();
     child0->depth = node->depth + 1;
     child1->depth = node->depth + 1;
-    child0->triangles = std::move(child0_triangles);
-    child1->triangles = std::move(child1_triangles);
-    child0->updateBounds();
-    child1->updateBounds();
-    recursiveSplit(child0);
-    recursiveSplit(child1);
-}
 
-// 现在从树形结构改变成线性结构，判断相交测试使用循环而不是递归
-// void BVH::recursiveIntersect(BVHTreeNode *node, const Ray &ray, float t_min, float t_max, std::optional<HitInfo> &closest_hit_info) const
-// {
-//     if (!node->bounds.hasIntersection(ray, t_min, t_max))
-//     {
-//         return;
-//     }
-//     if (node->triangles.empty())
-//     {
-//         recursiveIntersect(node->children[0], ray, t_min, t_max,closest_hit_info);
-//         recursiveIntersect(node->children[1], ray, t_min, t_max,closest_hit_info);
-//     }
-//     else
-//     {
-//         for (const auto& triangle : node->triangles)
-//         {
-//             auto hit_info = triangle.intersect(ray, t_min, t_max);
-//             if (hit_info)
-//             {
-//                 t_max = hit_info->t;
-//                 closest_hit_info = hit_info;
-//             }
-//         }
-//     }
-// }
+    child0->bounds = min_child0_bounds;
+    child1->bounds = min_child1_bounds;
+
+    recursiveSplit(child0,state);
+    recursiveSplit(child1,state);
+}
 
 size_t BVH::recursiveFlatten(BVHTreeNode* node)
 {
