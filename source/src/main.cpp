@@ -17,7 +17,7 @@ int main(int, char**){
 
 
     Film film { 192 * 5, 108 *5 };
-    Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
+    Camera camera { film, { -7, 5, -7 }, { 0, 0, 0 }, 45 };
    
 
     Model model("../../models/dragon_87k.obj");
@@ -32,29 +32,51 @@ int main(int, char**){
     };
 
     Scene scene;
-    scene.addShape(
-        model,
-        { RGB(202, 159, 117) },
-        { 0, 0, 0 },
-        { 1, 3, 2 },
-        {2,2,2}
-    );
-     scene.addShape(
-         sphere,
-         { { 1, 1, 1 }, false, RGB(255, 128, 128) },
-         { 0, 0, 2.5 }
-     );
-     scene.addShape(
-         sphere,
-         { { 1, 1, 1 }, false, RGB(128, 128, 255) },
-         { 0, 0, -2.5 }
-     );
-     scene.addShape(
-         sphere,
-         { { 1, 1, 1 }, true },
-         { 3, 0.5, -2 }
-     );
-     scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+
+    RNG rng{ 1234 };
+
+    for (size_t i =0 ; i < 100; i++)
+    {
+	    glm::vec3 random_pos {
+			rng.uniform() * 10 - 5,
+			rng.uniform() * 2,
+			rng.uniform() * 10 - 5
+		};
+		float u = rng.uniform();
+        if (u<0.9)
+        {
+            scene.addShape(
+                model,
+                { RGB(202, 159, 117), rng.uniform() > 0.5 },
+                random_pos,
+                { rng.uniform() * 360,rng.uniform() * 360,rng.uniform() * 360 },
+                { 1,1,1 }
+            );
+        }
+        else if (u < 0.95)
+        {
+            scene.addShape(
+                sphere,
+                { { 1, 1, 1 }, true, RGB(255, 128, 128) },
+                random_pos,
+				{.4, .4, .4}
+            );
+        }
+        else
+        {
+            random_pos.y += 4;
+            scene.addShape(
+                sphere,
+                { { 1, 1, 1 }, false, RGB(128, 128, 255) },
+                random_pos
+            );
+        }
+    }
+
+
+	scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+
+    scene.build();
 
     NormalRenderer normal_renderer(camera, scene);
     normal_renderer.render(32, "normal.ppm");
@@ -64,9 +86,6 @@ int main(int, char**){
 
     TriangleTestCountRenderer ttc_renderer(camera,scene);
     ttc_renderer.render(1, "TTC.ppm");
-
-    BoundsDepthRenderer bd_renderer(camera,scene);
-    bd_renderer.render(1, "BD.ppm");
 
 
     SimpleRTRenderer simple_rt_renderer(camera, scene);

@@ -10,6 +10,11 @@ struct Ray {
     glm::vec3 hit(float t) const { return origin + t * direction; }
 
     Ray ObjectFromWorld(const glm::mat4& object_from_world) const;
+
+#ifdef WITH_DEBUG_INFO
+    mutable size_t bounds_test_count = 0;
+    mutable size_t triangle_test_count = 0;
+#endif
 };
 
 struct HitInfo
@@ -19,9 +24,5 @@ struct HitInfo
     glm::vec3 normal;
     const Material *material = nullptr;
 
-#ifdef WITH_DEBUG_INFO
-    size_t bounds_test_count = 0;
-    size_t triangle_test_count = 0;
-    size_t bounds_depth = 0;
-#endif
+
 };
